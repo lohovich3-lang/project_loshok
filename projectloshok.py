@@ -5,7 +5,7 @@ from telethon import TelegramClient, events
 from google import genai
 
 API_ID = int(os.getenv("API_ID", "0"))
-API_HASH = os.getenv("API_HASK", "")
+API_HASH = os.getenv("API_HASH", "")
 SESSION_STRING = os.getenv("SESSION_STRING", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
