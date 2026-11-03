@@ -51,9 +51,9 @@ async def handle_message(event):
                         'system_instruction': SYSTEM_INSTRUCTION
                     }
                 )
-            response = await asyncio.to_thread(
-                chats[user_id].send_message,
-                user_text
+            # Убираем asyncio.to_thread, так как метод поддерживает async или вызывается напрямую
+            response = chats[user_id].send_message(user_text)
+            await event.reply(response.text)
             )
             await event.reply(response.text)
 
