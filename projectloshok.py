@@ -1,27 +1,17 @@
-from telethon.sessions import StringSession
 import os
 import asyncio
 from telethon import TelegramClient, events
-from google import genai
+from openai import OpenAI
 
-API_ID = int(os.getenv("API_ID", "0"))
-API_HASH = os.getenv("API_HASH", "")
-SESSION_STRING = os.getenv("SESSION_STRING", "")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+# Инициализация клиента OpenRouter (совместим с OpenAI)
+ai_client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+)
 
-
-client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-
-
-chats = {}
-
-SYSTEM_INSTRUCTION = """
-Ты — мой персональный ИИ-ассистент, который общается в личных сообщениях Telegram от моего имени.
-Отвечай современно, естественным и нейтральным тоном.
-Пиши кратко и емко, как человек в мессенджере (без длинных формальных эссе, если не просят).
-Если просят что-то решить - реши как обычно решаешь
-"""
+# Словарь для хранения истории диалогов
+chat_histories = {}
+SYSTEM_INSTRUCTION = "Ты мой персональный ассистент,отвечающий с моего имени.Отвечай вежливо кратко и по делу,главное современно"
 
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
 async def handle_message(event):
@@ -31,28 +21,35 @@ async def handle_message(event):
 
     user_id = sender.id
     user_text = event.raw_text
+    print(f"DEBUG: Сообщение от {user_id}: {user_text}", flush=True)
 
-    print(f"DEBUG: Пришло сообщение от ID {user_id}: {user_text}", flush=True)
+    # Инициализация истории, если пользователя еще нет в словаре
+    if user_id not in chat_histories:
+        chat_histories[user_id] = [
+            {"role": "system", "content": SYSTEM_INSTRUCTION}
+        ]
+
+    # Добавляем входящее сообщение
+    chat_histories[user_id].append({"role": "user", "content": user_text})
 
     try:
-        # 1. Создаем чат с Gemini, если его еще нет
-        if user_id not in chats:
-            chats[user_id] = gemini_client.chats.create(
-                model='gemini-2.0-flash',
-                config={
-                    'system_instruction': SYSTEM_INSTRUCTION  # Без опечаток
-                }
-            )
+        # Вызов API OpenRouter (можно выбрать любую модель: meta-llama/llama-3.3-70b-instruct, openai/gpt-4o-mini, anthropic/claude-3.5-haiku и т.д.)
+        completion = await asyncio.to_thread(
+            ai_client.chat.completions.create,
+            model="meta-llama/llama-3.3-70b-instruct",
+            messages=chat_histories[user_id]
+        )
 
-        # 2. ВСТАВЛЯЕМ СТРОЧКИ ДЛЯ ПОЛУЧЕНИЯ И ОТПРАВКИ ОТВЕТА ИИ:
-        response = chats[user_id].send_message(user_text)
-        print(f"DEBUG: Gemini ответил: {response.text}", flush=True)
+        reply_text = completion.choices[0].message.content
 
-        # 3. Отправляем ответ пользователю в Telegram
-        await event.reply(response.text)
+        # Сохраняем ответ ИИ в историю
+        chat_histories[user_id].append({"role": "assistant", "content": reply_text})
+
+        print(f"DEBUG: Ответил: {reply_text}", flush=True)
+        await event.reply(reply_text)
 
     except Exception as e:
-        print(f"Ошибка при обработке сообщения от {user_id}: {e}", flush=True)
+        print(f"Ошибка OpenRouter для ID {user_id}: {e}", flush=True)
 
 
 if __name__ == '__main__':
