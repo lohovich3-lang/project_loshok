@@ -58,5 +58,8 @@ async def handle_message(event):
 
 if __name__ == '__main__':
     print("Юзербот с Gemini успешно запущен...")
-    with client:
-        client.run_until_disconnected
+    try:
+        with client:
+            client.run_until_disconnected()
+    except Exception as e:
+        print(f"КРИТИЧЕСКАЯ ОШИБКА В РАБОТЕ БОТА: {e}")
