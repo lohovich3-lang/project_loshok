@@ -38,7 +38,7 @@ async def handle_message(event):
         # 1. Создаем чат с Gemini, если его еще нет
         if user_id not in chats:
             chats[user_id] = gemini_client.chats.create(
-                model='gemini-3.8-flash',
+                model='gemini-2.0-flash',
                 config={
                     'system_instruction': SYSTEM_INSTRUCTION  # Без опечаток
                 }
