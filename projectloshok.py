@@ -26,6 +26,11 @@ SYSTEM_INSTRUCTION = """
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
 async def handle_message(event):
     sender = await event.get_sender()
+    print(f"DEBUG: Пришло сообщение от ID {sender.id}: {event.raw_text}", flush=True)
+
+    if not sender or sender.bot:
+        return
+    # Дальше ваш код обработки...
 
     if not sender or sender.bot:
         return
