@@ -1,20 +1,18 @@
-import os
-import asyncio
 from telethon import TelegramClient, events
-from openai import OpenAI
+from telethon.sessions import StringSession
+import os
 
-# Инициализация клиента OpenRouter (совместим с OpenAI)
-ai_client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
+# Инициализация клиента Telegram строго с именем client
+client = TelegramClient(
+    StringSession(os.getenv("SESSION_STRING")),
+    int(os.getenv("API_ID")),
+    os.getenv("API_HASH")
 )
 
-# Словарь для хранения истории диалогов
-chat_histories = {}
-SYSTEM_INSTRUCTION = "Ты мой персональный ассистент,отвечающий с моего имени.Отвечай вежливо кратко и по делу,главное современно"
-
+# Дальше идет ваш декоратор и обработчик
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
 async def handle_message(event):
+    ...
     sender = await event.get_sender()
     if not sender or sender.bot:
         return
