@@ -26,39 +26,33 @@ SYSTEM_INSTRUCTION = """
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
 async def handle_message(event):
     sender = await event.get_sender()
-    print(f"DEBUG: Пришло сообщение от ID {sender.id}: {event.raw_text}", flush=True)
-
-    if not sender or sender.bot:
-        return
-    # Дальше ваш код обработки...
-
     if not sender or sender.bot:
         return
 
     user_id = sender.id
     user_text = event.raw_text
 
-    if not user_text:
-        return
+    print(f"DEBUG: Пришло сообщение от ID {user_id}: {user_text}", flush=True)
 
-
-    async with client.action(event.chat_id, 'typing'):
-        try:
-            if user_id not in chats:
-                chats[user_id] = gemini_client.chats.create(
-                    model='gemini-2.5-flash',
-                    config={
-                        'system_instruction': SYSTEM_INSTRUCTION
-                    }
-                )
-            # Убираем asyncio.to_thread, так как метод поддерживает async или вызывается напрямую
-            response = chats[user_id].send_message(user_text)
-            await event.reply(response.text)
+    try:
+        # 1. Создаем чат с Gemini, если его еще нет
+        if user_id not in chats:
+            chats[user_id] = gemini_client.chats.create(
+                model='gemini-2.5-flash',
+                config={
+                    'system_instruction': SYSTEM_INSTRUCTION  # Без опечаток
+                }
             )
-            await event.reply(response.text)
 
-        except Exception as e:
-            print(f"Ошибка при обработке сообщения от {user_id}: {e}")
+        # 2. ВСТАВЛЯЕМ СТРОЧКИ ДЛЯ ПОЛУЧЕНИЯ И ОТПРАВКИ ОТВЕТА ИИ:
+        response = chats[user_id].send_message(user_text)
+        print(f"DEBUG: Gemini ответил: {response.text}", flush=True)
+
+        # 3. Отправляем ответ пользователю в Telegram
+        await event.reply(response.text)
+
+    except Exception as e:
+        print(f"Ошибка при обработке сообщения от {user_id}: {e}", flush=True)
 
 
 if __name__ == '__main__':
