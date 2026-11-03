@@ -29,7 +29,7 @@ ai_client = OpenAI(
 
 # Хранилище истории диалогов и системный промпт
 chat_histories = {}
-SYSTEM_INSTRUCTION = "Ты — мой персональный ассистент. Отвечай вежливо, коротко и по делу."
+SYSTEM_INSTRUCTION = "Ты — мой персональный ассистент. Отвечай от моего имени,кратко,современно и по делу"
 
 # 4. Обработчик входящих личных сообщений
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
