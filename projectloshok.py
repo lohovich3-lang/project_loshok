@@ -8,24 +8,23 @@ client = TelegramClient(
     int(os.getenv("API_ID")),
     os.getenv("API_HASH")
 )
+# Объявляем словарь для истории диалогов в самом начале файла
+chat_histories = {}
+SYSTEM_INSTRUCTION = "Ты — мой персональный ассистент. Отвечай вежливо, коротко и по делу."
 
-# Дальше идет ваш декоратор и обработчик
 @client.on(events.NewMessage(incoming=True, func=lambda e: e.is_private))
 async def handle_message(event):
-    ...
+    # Дальше идет сам код функции с проверкой chat_histories
     sender = await event.get_sender()
     if not sender or sender.bot:
         return
 
     user_id = sender.id
-    user_text = event.raw_text
-    print(f"DEBUG: Сообщение от {user_id}: {user_text}", flush=True)
-
-    # Инициализация истории, если пользователя еще нет в словаре
     if user_id not in chat_histories:
         chat_histories[user_id] = [
             {"role": "system", "content": SYSTEM_INSTRUCTION}
         ]
+    # ... остальной код ...
 
     # Добавляем входящее сообщение
     chat_histories[user_id].append({"role": "user", "content": user_text})
