@@ -48,7 +48,7 @@ async def handle_message(event):
                 chats[user_id] = gemini_client.chats.create(
                     model='gemini-2.5-flash',
                     config={
-                        'system_insctruction': SYSTEM_INSTRUCTION
+                        'system_instruction': SYSTEM_INSTRUCTION
                     }
                 )
             response = await asyncio.to_thread(
